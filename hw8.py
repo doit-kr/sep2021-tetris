@@ -1,6 +1,44 @@
 import math, copy, random
-
 from cmu_112_graphics import *
+
+
+iPiece = [
+    [  True,  True,  True,  True ]
+]
+
+jPiece = [
+    [  True, False, False ],
+    [  True,  True,  True ]
+]
+
+lPiece = [
+    [ False, False,  True ],
+    [  True,  True,  True ]
+]
+
+oPiece = [
+    [  True,  True ],
+    [  True,  True ]
+]
+
+sPiece = [
+    [ False,  True,  True ],
+    [  True,  True, False ]
+]
+
+tPiece = [
+    [ False,  True, False ],
+    [  True,  True,  True ]
+]
+
+zPiece = [
+    [  True,  True, False ],
+    [ False,  True,  True ]
+]
+
+tetrisPieces = [ iPiece, jPiece, lPiece, oPiece, sPiece, tPiece, zPiece ]
+tetrisPieceColors = [ "red", "yellow", "magenta", "pink", "cyan", "green", "orange" ]
+
 
 def appStarted(app):
     (width, height, rows, cols, cellSize, margin) = gameDimensions()
@@ -10,25 +48,48 @@ def appStarted(app):
     app.margin = margin
     app.board = [["blue" for i in range(cols)] for j in range(rows)]
     app.defaultColor = "blue"
-    
+    app.tetrisPieces = tetrisPieces
+    app.tetrisPieceColors = tetrisPieceColors
+
     # for testing remove later
     app.board[0][0] = "red"
     app.board[0][cols-1] = "white"
     app.board[rows-1][0] = "green"
     app.board[rows-1][cols-1] = "gray"
+    newFallingPiece(app)
 
-def drawCell(app, canvas, i, j):
-    canvas.create_rectangle(app.margin + app.cellSize * j, app.margin + app.cellSize * i, app.margin + app.cellSize * (j + 1), app.margin + app.cellSize * (i + 1), fill = app.board[i][j])
+def keyPressed(app, event):
+    newFallingPiece(app)
+
+def newFallingPiece(app):
+    randomIdx = random.randint(0, len(app.tetrisPieces) - 1)
+    app.fallingPiece = app.tetrisPieces[randomIdx]
+    app.fallingPieceColor = app.tetrisPieceColors[randomIdx]
+    app.fallingPieceRow = 0
+    app.fallingPieceCol = app.cols // 2 - len(app.fallingPiece[0]) // 2
+     
+
+def drawFallingPiece(app, canvas):
+    piece = app.fallingPiece
+    for i in range(len(piece)):
+        for j in range(len(piece[0])):
+            if piece[i][j] == True:
+                drawCell(app, canvas, i + app.fallingPieceRow, j + app.fallingPieceCol, app.fallingPieceColor)
+
+
+def drawCell(app, canvas, i, j, color):
+    canvas.create_rectangle(app.margin + app.cellSize * j, app.margin + app.cellSize * i, app.margin + app.cellSize * (j + 1), app.margin + app.cellSize * (i + 1), fill = color)
 
 
 def drawboard(app, canvas):
     for i in range(app.rows):
         for j in range(app.cols):
-            drawCell(app, canvas, i, j)
+            drawCell(app, canvas, i, j, app.board[i][j])
 
 def redrawAll(app, canvas):
-    
     drawboard(app, canvas)
+    drawFallingPiece(app, canvas)
+
 
                        
 
