@@ -59,7 +59,33 @@ def appStarted(app):
     newFallingPiece(app)
 
 def keyPressed(app, event):
-    newFallingPiece(app)
+    if event.key == "Left":
+        moveFallingPiece(app, 0, -1)
+    if event.key ==  "Right":
+        moveFallingPiece(app, 0, 1)
+    if event.key == "Up":
+        moveFallingPiece(app, -1, 0)    
+    if event.key == "Down":
+        moveFallingPiece(app, 1, 0)    
+
+def isLegal(app):
+    for i in range(len(app.fallingPiece)):
+        for j in range(len(app.fallingPiece[0])):
+            if app.fallingPieceCol + j >= app.cols or app.fallingPieceRow+ i >= app.rows or app.fallingPieceCol + j < 0 or app.fallingPieceRow + i < 0:
+                return False
+            if app.fallingPiece[i][j] == True:
+                if app.board[i + app.fallingPieceRow][j + app.fallingPieceCol] != app.defaultColor:
+                    return False
+    return True
+
+def moveFallingPiece(app, drow, dcol):
+    app.fallingPieceCol += dcol
+    app.fallingPieceRow += drow
+    if isLegal(app) == False:
+        app.fallingPieceCol -= dcol
+        app.fallingPieceRow -= drow
+
+
 
 def newFallingPiece(app):
     randomIdx = random.randint(0, len(app.tetrisPieces) - 1)
