@@ -50,13 +50,27 @@ def appStarted(app):
     app.defaultColor = "blue"
     app.tetrisPieces = tetrisPieces
     app.tetrisPieceColors = tetrisPieceColors
-
-    # for testing remove later
-    app.board[0][0] = "red"
-    app.board[0][cols-1] = "white"
-    app.board[rows-1][0] = "green"
-    app.board[rows-1][cols-1] = "gray"
+    app.isGameOver = False
+    app.score = 0   
     newFallingPiece(app)
+
+def placeFallingPiece(app):
+    piece = app.fallingPiece
+    for i in range(len(piece)):
+        for j in range(len(piece[0])):
+            if piece[i][j] == True:
+                app.board[i + app.fallingPieceRow][j + app.fallingPieceCol] = app.fallingPieceColor
+    removeFullRows(app)
+
+def timerFired(app):
+    if not app.isGameOver:
+        hasMoved = moveFallingPiece(app, 1, 0)    
+        if not hasMoved:
+            placeFallingPiece(app)
+            newFallingPiece(app) 
+            if not isLegal(app):
+                app.isGameOver = True    
+
 
 def keyPressed(app, event):
     if event.key == "Left":
@@ -64,9 +78,43 @@ def keyPressed(app, event):
     if event.key ==  "Right":
         moveFallingPiece(app, 0, 1)
     if event.key == "Up":
-        moveFallingPiece(app, -1, 0)    
+        rotateFallingPiece(app)    
     if event.key == "Down":
-        moveFallingPiece(app, 1, 0)    
+        moveFallingPiece(app, 1, 0) 
+    if app.isGameOver and event.key == "r":
+        app.board = [["blue" for i in range(app.cols)] for j in range(app.rows)]
+        app.isGameOver = False
+    if event.key == "Space":
+        for i in range(app.rows):
+            moveFallingPiece(app, 1, 0)
+            if not isLegal(app):
+                break
+
+
+def rotateFallingPiece(app):
+    original = app.fallingPiece
+    originalRow = len(app.fallingPiece)
+    originalCol = len(app.fallingPiece[0])
+    originalFallingPieceRow = app.fallingPieceRow
+    originalFallingPieceCol = app.fallingPieceCol
+
+    rotatedPiece = []
+    for i in range(originalCol):
+        row = []
+        for j in range(originalRow):
+            row.append(None)            
+        rotatedPiece.append(row)
+    for i in range(originalRow):
+        for j in range(originalCol):
+            val = original[i][j]
+            rotatedPiece[originalCol - j - 1][i] = val
+    app.fallingPiece = rotatedPiece
+    app.fallingPieceRow = app.fallingPieceRow + originalRow // 2 - originalCol // 2
+    app.fallingPieceCol = app.fallingPieceCol + originalCol // 2 - originalRow // 2
+    if not isLegal(app):
+        app.fallingPiece = original
+        app.fallingPieceRow = originalFallingPieceRow
+        app.fallingPieceCol = originalFallingPieceCol
 
 def isLegal(app):
     for i in range(len(app.fallingPiece)):
@@ -84,6 +132,22 @@ def moveFallingPiece(app, drow, dcol):
     if isLegal(app) == False:
         app.fallingPieceCol -= dcol
         app.fallingPieceRow -= drow
+        return False
+    return True        
+
+def removeFullRows(app):
+    fullRows = 0
+    newBoard = []
+    for row in app.board:
+        if app.defaultColor in row:
+           newBoard.append(copy.copy(row))
+        else:
+            fullRows += 1
+    for i in range(fullRows):
+        newRow = [app.defaultColor for i in range(app.cols)]
+        newBoard = [newRow] + newBoard
+    app.board = newBoard
+    app.score += fullRows ** 2
 
 
 
@@ -114,8 +178,13 @@ def drawboard(app, canvas):
 
 def redrawAll(app, canvas):
     drawboard(app, canvas)
-    drawFallingPiece(app, canvas)
+    
+    if app.isGameOver:
+        canvas.create_text(app.width/2, 20, text = "GAME OVER!" )
+    else:
+        drawFallingPiece(app, canvas)
 
+    canvas.create_text(app.width/2, 10, text = "SCORE: "+ str(app.score))
 
                        
 
